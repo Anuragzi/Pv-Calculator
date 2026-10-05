@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tiens Product Inventory &amp; PV Calculator</title>
+
+<style>
+/* =========================================================
+   THEME VARIABLES
+   ========================================================= */
+:root{
+  --green-900:#0f3d2e;
+  --green-800:#14523c;
+  --green-700:#1b6b4f;
+  --green-600:#22855f;
+  --green-500:#2ea37a;
+  --green-100:#dff0e9;
+  --green-50:#eef7f3;
+
+  --ink:#1f2933;
+  --muted:#5b6b73;
+  --border:#dbe4e0;
+  --bg:#f2f6f4;
+  --white:#ffffff;
+  --danger:#c0392b;
+  --danger-bg:#fdf1ef;
+  --danger-border:#f3d5d0;
+
+  --radius:14px;
+  --shadow:0 1px 3px rgba(16,40,32,.06);
+}
+
+*{ box-sizing:border-box; }
+
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  line-height:1.45;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.app-header{
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-500) 100%);
+  color:#fff;
+  padding: 26px 20px;
+}
+.app-header-inner{
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.app-header h1{
+  margin:0 0 6px;
+  font-size: clamp(1.15rem, 3.4vw, 1.65rem);
+  letter-spacing:-.01em;
+}
+.app-header p{
+  margin:0;
+  font-size: .9rem;
+  opacity:.92;
+}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.card{
+  background: var(--white);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom: 12px;
+}
+
+.card-title{
+  margin:0 0 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--green-800);
+  letter-spacing:.01em;
+}
+.card-head .card-title{ margin:0; }
+
+/* =========================================================
+   ADD PRODUCT ROW
+   ========================================================= */
+.add-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:flex-end;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.field-grow{ flex: 1 1 320px; min-width: 0; }
+.field-qty{ flex: 0 0 120px; }
+
+label{
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color: var(--muted);
+}
+
+select,
+input[type="number"]{
+  width:100%;
+  padding: 11px 12px;
+  border:1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  color: inherit;
+  font-size:.94rem;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+select:focus,
+input[type="number"]:focus{
+  outline:none;
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(46,163,122,.16);
+}
+
+.hint{
+  margin: 12px 0 0;
+  font-size:.8rem;
+  color: var(--muted);
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.btn{
+  border:none;
+  border-radius:10px;
+  padding: 11px 18px;
+  font-size:.9rem;
+  font-weight:700;
+  font-family:inherit;
+  cursor:pointer;
+  white-space:nowrap;
+  transition: background .15s, transform .05s, color .15s;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{
+  background: var(--green-600);
+  color:#fff;
+  box-shadow: 0 2px 6px rgba(34,133,95,.28);
+}
+.btn-primary:hover{ background: var(--green-700); }
+
+.btn-ghost-danger{
+  background:#fff;
+  color: var(--danger);
+  border:1px solid var(--danger-border);
+  padding: 9px 14px;
+  font-size:.83rem;
+}
+.btn-ghost-danger:hover{ background: var(--danger-bg); }
+
+.remove-btn{
+  background: var(--danger-bg);
+  color: var(--danger);
+  border:1px solid var(--danger-border);
+  border-radius:8px;
+  padding: 7px 13px;
+  font-size:.8rem;
+  font-weight:700;
+  font-family:inherit;
+  cursor:pointer;
+  transition: background .15s;
+}
+.remove-btn:hover{ background:#f8e0dc; }
+
+/* =========================================================
+   BADGE
+   ========================================================= */
+.badge{
+  display:inline-block;
+  background: var(--green-50);
+  color: var(--green-700);
+  border:1px solid var(--green-100);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size:.75rem;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+.table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+}
+
+.items-table{
+  width:100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size:.88rem;
+}
+
+.items-table thead th{
+  background: var(--green-700);
+  color:#fff;
+  text-align:left;
+  padding: 12px;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.items-table thead th:first-child{ border-radius: 10px 0 0 10px; }
+.items-table thead th:last-child{ border-radius: 0 10px 10px 0; }
+
+.items-table td{
+  padding: 12px;
+  border-bottom:1px solid var(--border);
+  vertical-align: middle;
+}
+.items-table tbody tr:last-child td{ border-bottom:none; }
+.items-table tbody tr:hover{ background:#f8fbfa; }
+
+.num{
+  text-align:right;
+  font-variant-numeric: tabular-nums;
+}
+.qty-cell{ text-align:center; }
+
+.total-cell{
+  font-weight:700;
+  color: var(--green-800);
+}
+
+.prod{ display:flex; flex-direction:column; gap:2px; }
+.prod-name{ font-weight:600; color: var(--ink); }
+.prod-code{
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.06em;
+  color: var(--muted);
+}
+
+.qty-input{
+  width: 78px;
+  padding: 7px 8px;
+  text-align:center;
+  font-weight:700;
+  font-size:.88rem;
+}
+
+.empty-cell{
+  text-align:center !important;
+  color: var(--muted);
+  padding: 34px 12px !important;
+  font-size:.9rem;
+}
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+.summary{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:16px;
+}
+
+.summary-card{
+  background: var(--white);
+  border:1px solid var(--border);
+  border-left:5px solid var(--green-600);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.summary-label{
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color: var(--muted);
+}
+
+.summary-value{
+  font-size: clamp(1.3rem, 4vw, 1.85rem);
+  font-weight: 800;
+  color: var(--green-700);
+  font-variant-numeric: tabular-nums;
+  letter-spacing:-.01em;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.app-footer{
+  text-align:center;
+  font-size:.78rem;
+  color: var(--muted);
+  padding: 4px 20px 28px;
+}
+
+/* =========================================================
+   RESPONSIVE — MOBILE CARD TABLE
+   ========================================================= */
+@media (max-width: 820px){
+  .items-table{ min-width:0; }
+  .items-table thead{ display:none; }
+  .items-table,
+  .items-table tbody,
+  .items-table tr,
+  .items-table td{ display:block; width:100%; }
+
+  .items-table tbody tr{
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    box-shadow: var(--shadow);
+    padding: 4px 14px;
+    margin-bottom:12px;
+  }
+  .items-table tbody tr:hover{ background:#fff; }
+
+  .items-table td{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding: 10px 0;
+    border-bottom:1px dashed var(--border);
+    text-align:right;
+  }
+  .items-table td:last-child{ border-bottom:none; }
+
+  .items-table td::before{
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size:.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color: var(--muted);
+    text-align:left;
+  }
+
+  .prod{ align-items:flex-end; text-align:right; }
+  .qty-input{ width: 84px; }
+  .empty-cell{ justify-content:center !important; }
+  .empty-cell::before{ content:none; }
+}
+
+@media (max-width: 640px){
+  .summary{ grid-template-columns: 1fr; }
+  .field-qty{ flex: 1 1 100px; }
+  .btn-primary{ flex: 1 1 100%; }
+  .container{ padding: 14px; }
+  .card{ padding: 14px; }
+}
+</style>
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <h1>Tiens Product Inventory &amp; PV Calculator</h1>
+      <p>Select products, set quantities and get instant DP, MRP &amp; PV totals.</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ================= ADD PRODUCT ================= -->
+    <section class="card">
+      <h2 class="card-title">Add Product</h2>
+
+      <div class="add-row">
+        <div class="field field-grow">
+          <label for="productSelect">Product</label>
+          <select id="productSelect"></select>
+        </div>
+
+        <div class="field field-qty">
+          <label for="qtyInput">Quantity</label>
+          <input id="qtyInput" type="number" min="1" step="1" value="1" />
+        </div>
+
+        <button id="addBtn" class="btn btn-primary" type="button">+ Add to List</button>
+      </div>
+
+      <p class="hint">Tip: You can also change the quantity directly inside the table below — totals update instantly.</p>
+    </section>
+
+    <!-- ================= ITEMS TABLE ================= -->
+    <section class="card">
+      <div class="card-head">
+        <h2 class="card-title">Selected Items</h2>
+        <span class="badge" id="itemCount">Empty</span>
+        <button id="clearBtn" class="btn btn-ghost-danger" type="button">Clear All</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Product Name &amp; Code</th>
+              <th>Qty</th>
+              <th>DP / Unit</th>
+              <th>Total DP</th>
+              <th>MRP / Unit</th>
+              <th>Total MRP</th>
+              <th>PV / Unit</th>
+              <th>Total PV</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- rows are generated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= SUMMARY ================= -->
+    <section class="summary">
+      <div class="summary-card">
+        <span class="summary-label">Total DP</span>
+        <span class="summary-value" id="totalDP">₹0.00</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Total MRP</span>
+        <span class="summary-value" id="totalMRP">₹0.00</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Total PV</span>
+        <span class="summary-value" id="totalPV">0.00</span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    Prices &amp; PV values are editable in the <strong>productsDB</strong> array at the top of the script.
+  </footer>
+
+
+<script>
+/* =========================================================================
+   ⚙️  PRODUCT DATABASE  —  ✏️ EDIT / ADD YOUR PRODUCTS HERE  ⚙️
+   -------------------------------------------------------------------------
+   Each product object needs these 5 properties:
+
+     code : Product code              (string)  e.g. "B009"
+     name : Product name              (string)  e.g. "TIENS FOS POWDER"
+     dp   : Distributor Price / unit  (number)  e.g. 943
+     mrp  : Maximum Retail Price/unit (number)  e.g. 1154
+     pv   : Point Value per unit      (number)  e.g. 10.86
+
+   👉 TO ADD A PRODUCT   : copy any line below and change the values.
+   👉 TO UPDATE A PRICE  : just change the number — the app updates itself.
+   👉 TO DELETE A PRODUCT: delete the whole { ... }, line.
+   👉 Keep the commas between the { } blocks!
+   ========================================================================= */
+const productsDB = [
+  { code: "B009",  name: "TIENS FOS POWDER",              dp: 943,  mrp: 1154, pv: 10.86 },
+  { code: "B006N", name: "TIENS ZINC CAPSULES",           dp: 941,  mrp: 1176, pv: 11.08 },
+  { code: "B033",  name: "TIENS CALCIUM HMB",             dp: 1891, mrp: 2364, pv: 22.25 },
+  { code: "H021",  name: "DICHO 2 IN 1 LIQUID DETERGENT", dp: 490,  mrp: 613,  pv: 5.76  },
+  { code: "B001N", name: "TIENS OPC PLUS CAPSULES",       dp: 2388, mrp: 2985, pv: 28.10 }
+
+  /* ---- Example of how to add more products (remove the // to activate) ----
+  ,{ code: "B010",  name: "TIENS BONE POWDER",            dp: 1200, mrp: 1500, pv: 14.10 }
+  ,{ code: "H022",  name: "TIENS TOOTHPASTE",             dp: 350,  mrp: 450,  pv: 4.10  }
+  ------------------------------------------------------------------------- */
+];
+/* ========================================================================= */
+
+
+/* =========================================================
+   APP STATE  (the list of products currently in the table)
+   Each entry: { code: "B009", qty: 3 }
+   ========================================================= */
+const cart = [];
+
+/* ---------- DOM references ---------- */
+const productSelect = document.getElementById("productSelect");
+const qtyInput      = document.getElementById("qtyInput");
+const addBtn        = document.getElementById("addBtn");
+const clearBtn      = document.getElementById("clearBtn");
+const tableBody     = document.getElementById("tableBody");
+const itemCountEl   = document.getElementById("itemCount");
+const totalDPEl     = document.getElementById("totalDP");
+const totalMRPEl    = document.getElementById("totalMRP");
+const totalPVEl     = document.getElementById("totalPV");
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+/** Find a product object in productsDB by its code. */
+function getProduct(code){
+  return productsDB.find(p => p.code === code);
+}
+
+/** Format a number as Indian Rupees, e.g. 2388 -> ₹2,388.00 */
+function money(n){
+  return "₹" + Number(n).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+/** Format a plain number with 2 decimals, e.g. 28.1 -> 28.10 */
+function num2(n){
+  return Number(n).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+/** Keep quantities sane: whole numbers, minimum 1, maximum 99999. */
+function clampQty(value){
+  const n = parseInt(value, 10);
+  if (isNaN(n) || n < 1) return 1;
+  return Math.min(n, 99999);
+}
+
+/* =========================================================
+   INITIALISE THE DROPDOWN
+   ========================================================= */
+function populateSelect(){
+  if (!productsDB.length){
+    productSelect.innerHTML = '<option value="">No products available</option>';
+    addBtn.disabled = true;
+    return;
+  }
+
+  productSelect.innerHTML = productsDB
+    .map(p => `<option value="${p.code}">${p.code} — ${p.name}</option>`)
+    .join("");
+}
+
+/* =========================================================
+   RENDER THE TABLE + SUMMARY
+   ========================================================= */
+function render(){
+  if (cart.length === 0){
+    tableBody.innerHTML =
+      '<tr><td class="empty-cell" colspan="9">No products added yet. Choose a product above and click “Add to List”.</td></tr>';
+  } else {
+    tableBody.innerHTML = cart.map(item => {
+      const p = getProduct(item.code);
+      if (!p) return "";
+
+      return `
+        <tr data-code="${p.code}">
+          <td data-label="Product">
+            <div class="prod">
+              <span class="prod-name">${p.name}</span>
+              <span class="prod-code">${p.code}</span>
+            </div>
+          </td>
+
+          <td data-label="Quantity" class="qty-cell">
+            <input class="qty-input"
+                   type="number"
+                   min="1"
+                   step="1"
+                   value="${item.qty}"
+                   data-code="${p.code}"
+                   aria-label="Quantity for ${p.name}" />
+          </td>
+
+          <td data-label="DP / Unit"  class="num">${money(p.dp)}</td>
+          <td data-label="Total DP"   class="num total-cell t-dp">${money(p.dp * item.qty)}</td>
+
+          <td data-label="MRP / Unit" class="num">${money(p.mrp)}</td>
+          <td data-label="Total MRP"  class="num total-cell t-mrp">${money(p.mrp * item.qty)}</td>
+
+          <td data-label="PV / Unit"  class="num">${num2(p.pv)}</td>
+          <td data-label="Total PV"   class="num total-cell t-pv">${num2(p.pv * item.qty)}</td>
+
+          <td data-label="Action">
+            <button class="remove-btn" type="button" data-code="${p.code}">Remove</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  renderSummary();
+  updateCount();
+}
+
+/** Recalculate and display the three summary totals. */
+function renderSummary(){
+  let totalDP = 0, totalMRP = 0, totalPV = 0;
+
+  cart.forEach(item => {
+    const p = getProduct(item.code);
+    if (!p) return;
+    totalDP  += p.dp  * item.qty;
+    totalMRP += p.mrp * item.qty;
+    totalPV  += p.pv  * item.qty;
+  });
+
+  totalDPEl.textContent  = money(totalDP);
+  totalMRPEl.textContent = money(totalMRP);
+  totalPVEl.textContent  = num2(totalPV);
+}
+
+/** Update the little badge next to "Selected Items". */
+function updateCount(){
+  if (cart.length === 0){
+    itemCountEl.textContent = "Empty";
+    return;
+  }
+  const totalUnits = cart.reduce((sum, i) => sum + i.qty, 0);
+  itemCountEl.textContent =
+    `${cart.length} product${cart.length > 1 ? "s" : ""} · ${totalUnits} unit${totalUnits > 1 ? "s" : ""}`;
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+/** Add the selected product (with quantity) to the list. */
+function addProduct(){
+  const code = productSelect.value;
+  if (!code) return;
+
+  const qty = clampQty(qtyInput.value);
+  const existing = cart.find(i => i.code === code);
+
+  if (existing){
+    existing.qty += qty;              // already in list → just increase quantity
+  } else {
+    cart.push({ code: code, qty: qty });
+  }
+
+  qtyInput.value = 1;
+  render();
+}
+
+/** Remove a single product row. */
+function removeProduct(code){
+  const index = cart.findIndex(i => i.code === code);
+  if (index > -1){
+    cart.splice(index, 1);
+    render();
+  }
+}
+
+/* =========================================================
+   EVENT LISTENERS
+   ========================================================= */
+
+/* Add button */
+addBtn.addEventListener("click", addProduct);
+
+/* Pressing Enter in the quantity box also adds the product */
+qtyInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") addProduct();
+});
+
+/* Clear all */
+clearBtn.addEventListener("click", () => {
+  if (cart.length === 0) return;
+  if (confirm("Remove all items from the list?")){
+    cart.length = 0;
+    render();
+  }
+});
+
+/* Quantity changed inside the table — update totals WITHOUT re-rendering
+   the whole table (so the input keeps focus while typing). */
+tableBody.addEventListener("input", e => {
+  const input = e.target;
+  if (!input.classList.contains("qty-input")) return;
+
+  const code = input.dataset.code;
+  const item = cart.find(i => i.code === code);
+  const p    = getProduct(code);
+  if (!item || !p) return;
+
+  item.qty = clampQty(input.value);
+
+  const row = input.closest("tr");
+  row.querySelector(".t-dp").textContent  = money(p.dp  * item.qty);
+  row.querySelector(".t-mrp").textContent = money(p.mrp * item.qty);
+  row.querySelector(".t-pv").textContent  = num2(p.pv  * item.qty);
+
+  renderSummary();
+  updateCount();
+});
+
+/* When leaving the quantity box, normalise it (e.g. empty -> 1) */
+tableBody.addEventListener("focusout", e => {
+  const input = e.target;
+  if (!input.classList.contains("qty-input")) return;
+
+  const item = cart.find(i => i.code === input.dataset.code);
+  if (item) input.value = item.qty;
+});
+
+/* Remove buttons (event delegation) */
+tableBody.addEventListener("click", e => {
+  const btn = e.target.closest(".remove-btn");
+  if (!btn) return;
+  removeProduct(btn.dataset.code);
+});
+
+/* =========================================================
+   START THE APP
+   ========================================================= */
+populateSelect();
+render();
+</script>
+
+</body>
+</html>
